@@ -1,0 +1,54 @@
+# =============================================================================
+# SOS-Cameroun - AI Inference Service - Python 3.12.3 Optimized
+# =============================================================================
+
+# --- Core Setup (Crucial pour Python 3.12) ---
+setuptools>=70.0.0
+wheel>=0.43.0
+pip>=24.0
+
+# --- Framework API ---
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# --- STT : faster-whisper (Moteur CTranslate2) ---
+faster-whisper==1.0.3
+
+# --- TTS : edge-tts (Microsoft Azure Edge) ---
+edge-tts==7.2.8
+
+# --- LLM Client : Groq (Online) ---
+groq>=0.5.0
+
+# --- NLP / Traitement du langage ---
+spacy==3.7.5
+langdetect==1.0.9
+
+# --- ML / Deep Learning (Stable pour 3.12) ---
+# Note: Installation par défaut en CPU. 
+torch==2.3.1
+torchaudio==2.3.1
+
+# --- Audio processing ---
+soundfile==0.12.1
+pydub==0.25.1
+
+# --- Communication & Async ---
+httpx==0.27.0
+aiofiles==23.2.1
+redis==5.0.4
+
+# --- Message Queue ---
+aio-pika==9.4.2
+
+# --- Utilitaires ---
+python-dotenv==1.0.1
+pydantic==2.7.4
+pydantic-settings==2.2.1
+loguru==0.7.2
+prometheus-client==0.20.0
+
+# --- Tests ---
+pytest==8.2.2
+pytest-asyncio==0.23.7
