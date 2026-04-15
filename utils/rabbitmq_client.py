@@ -40,6 +40,23 @@ async def process_message(message: aio_pika.IncomingMessage):
             logger.error(f"❌ Erreur lors du traitement du message RabbitMQ : {e}")
 
 
+async def publish_task(task_type: str, data: dict):
+    """
+    Publie une tâche dans la file RabbitMQ pour traitement par un worker.
+    """
+    try:
+        connection = await aio_pika.connect_robust(RABBITMQ_URL)
+        async with connection:
+            channel = await connection.channel()
+            message_body = json.dumps({"type": task_type, **data})
+            await channel.default_exchange.publish(
+                aio_pika.Message(body=message_body.encode(), delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
+                routing_key="SOS_AI_INFERENCE_QUEUE",
+            )
+            logger.info(f"📤 Tâche publiée dans RabbitMQ : {task_type}")
+    except Exception as e:
+        logger.error(f"❌ Échec de publication RabbitMQ : {e}")
+
 async def start_rabbitmq_consumer():
     """
     Démarre la connexion à RabbitMQ et écoute la file 'SOS_AI_INFERENCE_QUEUE'.

@@ -1,0 +1,6 @@
+[
+  {
+    "type": "sqlite",
+    "path": "/home/ahmed-jalil/Bureau/ai-inference/data/fraud.db"
+  }
+]
