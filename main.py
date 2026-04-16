@@ -1,8 +1,7 @@
 """
-SOS-Cameroun — AI Inference Microservice (Senior Architecture)
+SOS-Cameroun — AI Inference Microservice
 ================================================================
 Point d'entrée FastAPI optimisé pour le traitement multimodal.
-Port : 8001
 """
 
 import logging

@@ -35,6 +35,7 @@ class TTSService:
 
     def __init__(self):
         self.edge_voice = settings.TTS_VOICE
+        self.coqui_available = False  # Actuellement désactivé pour simplifier le déploiement
         logger.info(
             f"✅ TTSService initialisé — Edge-TTS uniquement ({self.edge_voice})"
         )

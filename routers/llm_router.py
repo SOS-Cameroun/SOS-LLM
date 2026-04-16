@@ -100,6 +100,25 @@ async def parse_action(request: PromptRequest):
 
 
 @router.post(
+    "/summarize_for_tts",
+    response_model=LLMResponse,
+    summary="🎙️ Convertir des données structurées en texte pour TTS",
+    description="""
+    Prend un objet JSON (ex: conseils, contacts) et le convertit en un paragraphe
+    fluide et bienveillant, prêt à être lu par le moteur TTS (Edge-TTS).
+    """,
+    response_description="Texte fluide pour synthèse vocale",
+)
+async def summarize_for_tts(data: dict):
+    """Génère un résumé textuel pour le TTS à partir de JSON."""
+    try:
+        text = llm_service.generate_tts_response(data)
+        return LLMResponse(response=text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
     "/stress",
     response_model=StressAnalysis,
     summary="😰 Analyser le niveau de stress d'un texte",

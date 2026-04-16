@@ -1,5 +1,5 @@
 """
-Service LLM — Inférence Groq Ultra-Rapide (Expert Yaoundé)
+Service LLM — Inférence Groq Ultra-Rapide
 ============================================================
 Gère toutes les interactions avec l'API Groq pour le traitement du langage :
 - Extraction d'entités d'incident (type, gravité, lieu)
@@ -8,12 +8,12 @@ Gère toutes les interactions avec l'API Groq pour le traitement du langage :
 - Génération de réponses d'urgence adaptées
 - Scoring Anti-Fraude (Social Validation)
 
-System prompt ancré sur l'expertise architecturale de Yaoundé.
+System prompt ancré sur la ville de Yaoundé.
 """
 
 import logging
 import json
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 from groq import Groq
 from utils.config import settings
@@ -98,7 +98,7 @@ class LLMService:
 
     def __init__(self):
         self.api_key = settings.GROQ_API_KEY
-        self.model = "llama-3.1-70b-versatile"  # Modèle spécifique demandé
+        self.model = "llama-3.3-70b-versatile"  # Modèle spécifique demandé
 
         if not self.api_key:
             logger.error("❌ GROQ_API_KEY non configurée")
@@ -107,19 +107,23 @@ class LLMService:
             self.client = Groq(api_key=self.api_key)
             logger.info(f"✅ Service LLM Groq initialisé (Expert Yaoundé)")
 
-    def generate_response(self, prompt: str, system_prompt: str = "") -> str:
+    def generate_response(self, prompt: str, system_prompt: str = "", json_mode: bool = True) -> str:
         if not self.client: raise RuntimeError("Groq client not initialized")
         
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
+            kwargs: Dict[str, Any] = {
+                "model": self.model,
+                "messages": [
                     {"role": "system", "content": system_prompt or SYSTEM_PROMPT_YAONDE},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.2, # Plus déterministe pour le JSON
-                response_format={"type": "json_object"} # Force le mode JSON sur Groq
-            )
+                "temperature": 0.2,
+            }
+            
+            if json_mode:
+                kwargs["response_format"] = {"type": "json_object"}
+                
+            completion = self.client.chat.completions.create(**kwargs)
             return completion.choices[0].message.content
         except Exception as e:
             logger.error(f"❌ Erreur Groq API : {e}")
@@ -139,6 +143,38 @@ class LLMService:
         prompt = STRESS_ANALYSIS_PROMPT.format(text=text)
         res = self.generate_response(prompt)
         return self._parse_json(res, {"niveau": "MEDIUM", "score": 0.5})
+
+    def process_voice_action(self, text: str) -> dict:
+        """
+        Parse une commande vocale d'un agent en action structurée.
+        """
+        prompt = f"""
+        Analyse la commande suivante d'un agent de secours et convertis-la en JSON.
+        Actions possibles : affecter_agent, rejeter_alerte, valider_alerte.
+        Commande : "{text}"
+        
+        Réponds UNIQUEMENT en JSON :
+        {{
+            "action": "<nom_action>",
+            "parametres": {{ "id_alerte": "<id>", "agent": "<nom_si_dispo>" }}
+        }}
+        """
+        res = self.generate_response(prompt)
+        return self._parse_json(res, {"action": "unknown", "parametres": {}})
+
+    def generate_tts_response(self, structured_data: dict) -> str:
+        """
+        Convertit des données JSON en texte fluide "bonne et due forme" pour le TTS.
+        """
+        prompt = f"""
+        Convertis ces informations d'urgence en un paragraphe fluide et rassurant pour une victime.
+        Le texte doit être prêt à être lu par une synthèse vocale (TTS).
+        Informations : {json.dumps(structured_data, ensure_ascii=False)}
+        
+        Règle : Pas de listes, pas de JSON, juste un discours continu et calme.
+        """
+        # On désactive le mode JSON ici pour avoir du texte brut
+        return self.generate_response(prompt, json_mode=False)
 
     @staticmethod
     def _parse_json(raw: str, fallback: dict) -> dict:

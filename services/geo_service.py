@@ -421,7 +421,7 @@ class GeoService:
             return f"Lieu '{lieu}' non reconnu dans la topographie de Yaoundé."
 
         return (
-            f"📍 Lieu identifié : {landmark['display']} — Zone {landmark['zone']}.\n"
+            f"   Lieu identifié : {landmark['display']} — Zone {landmark['zone']}.\n"
             f"   Description : {landmark['description']}.\n"
             f"   Coordonnées : {landmark['lat']:.4f}°N, {landmark['lon']:.4f}°E.\n"
             f"   Ce lieu est dans le périmètre couvert par les services d'urgence de Yaoundé."
