@@ -20,7 +20,7 @@ logger = logging.getLogger("ai-inference.tts-router")
 @router.post(
     "/synthesize",
     response_model=TTSResponse,
-    summary="🔊 Synthétiser du texte en audio",
+    summary="Synthétiser du texte en audio",
     description="""
 Convertit un texte en fichier audio via Edge-TTS (Microsoft Azure).
 
@@ -51,7 +51,7 @@ async def synthesize_text(request: TTSRequest):
 
 @router.get(
     "/download/{filename}",
-    summary="📥 Télécharger un audio TTS",
+    summary="Télécharger un audio TTS",
     description="Télécharge un fichier audio précédemment généré par le service TTS.",
     response_description="Fichier audio MP3 ou WAV",
 )

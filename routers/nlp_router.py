@@ -21,7 +21,7 @@ class NLPRequest(BaseModel):
 
 @router.post(
     "/extract-entities",
-    summary="📝 Extraire les entités d'un texte",
+    summary="Extraire les entités d'un texte",
     description="""
 Extraction d'entités nommées via spaCy + validation topographique de Yaoundé.
 
@@ -44,7 +44,7 @@ async def extract_entities(req: NLPRequest):
 
 @router.post(
     "/clean",
-    summary="🧹 Nettoyer un texte brut",
+    summary="Nettoyer un texte brut",
     description="Normalise un texte brut (unicode, espaces, casse). "
                 "Utile pour les transcriptions vocales ou les saisies utilisateur.",
     response_description="Texte nettoyé",
@@ -59,7 +59,7 @@ async def clean_text(req: NLPRequest):
 
 @router.post(
     "/check-fragment",
-    summary="⚠️ Vérifier si un message est fragmenté",
+    summary="Vérifier si un message est fragmenté",
     description="""
 Détermine si un message semble fragmenté (danger imminent probable).
 

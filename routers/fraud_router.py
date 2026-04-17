@@ -25,7 +25,7 @@ logger = logging.getLogger("ai-inference.fraud-router")
 @router.get(
     "/logs",
     response_model=List[FraudLogEntry],
-    summary="📋 Lister les logs de fraude",
+    summary="Lister les logs de fraude",
     description="""
 Récupère les logs de fraude enregistrés par le pipeline anti-fraude.
 
@@ -68,7 +68,7 @@ async def list_fraud_logs(
 @router.get(
     "/logs/{log_id}",
     response_model=FraudLogEntry,
-    summary="🔍 Détail d'un log de fraude",
+    summary="Détail d'un log de fraude",
     description="Récupère les détails complets d'une entrée de fraude par son identifiant UUID.",
     response_description="Détail complet du log de fraude",
 )
@@ -82,7 +82,7 @@ async def get_fraud_log(log_id: str):
 
 @router.patch(
     "/logs/{log_id}/resolve",
-    summary="✅ Résoudre un log de fraude",
+    summary="Résoudre un log de fraude",
     description="""
 Marque un log de fraude comme **résolu** après investigation par un agent du CINU.
 
@@ -102,7 +102,7 @@ async def resolve_fraud_log(log_id: str):
 
 @router.get(
     "/stats",
-    summary="📊 Statistiques de fraude",
+    summary="Statistiques de fraude",
     description="Retourne le nombre de logs par label (FIABLE, SUSPECTE, FRAUDE) pour le dashboard.",
     response_description="Compteurs par label",
 )

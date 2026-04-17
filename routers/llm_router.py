@@ -27,7 +27,7 @@ logger = logging.getLogger("ai-inference.llm-router")
 @router.post(
     "/prompt",
     response_model=LLMResponse,
-    summary="🧠 Prompt libre vers Groq LLM",
+    summary="Prompt libre vers Groq LLM",
     description="""
 Envoie un prompt libre au LLM Groq (Llama 3.3 70B Versatile).
 Le system prompt par défaut est ancré sur le contexte SOS-Cameroun / Yaoundé.
@@ -51,7 +51,7 @@ async def prompt_llm(request: PromptRequest):
 @router.post(
     "/extract",
     response_model=ExtractionResponse,
-    summary="📋 Extraire les entités d'un texte d'alerte",
+    summary="Extraire les entités d'un texte d'alerte",
     description="""
 Extrait les entités structurées d'un texte d'alerte :
 - **type_incident** : INCENDIE, ACCIDENT, MEDICAL, INONDATION, AGRESSION, AUTRE
@@ -94,7 +94,7 @@ async def extract_information(request: PromptRequest):
 @router.post(
     "/action",
     response_model=ActionCommandResponse,
-    summary="🎤 Parser une commande vocale agent",
+    summary="Parser une commande vocale agent",
     description="""
 Convertit une commande vocale brute d'un agent du CINU en action structurée.
 
@@ -120,7 +120,7 @@ async def parse_action(request: PromptRequest):
 @router.post(
     "/summarize_for_tts",
     response_model=LLMResponse,
-    summary="🎙️ Convertir des données structurées en texte pour TTS",
+    summary="Convertir des données structurées en texte pour TTS",
     description="""
     Prend un objet JSON (ex: conseils, contacts) et le convertit en un paragraphe
     fluide et bienveillant, prêt à être lu par le moteur TTS (Edge-TTS).
@@ -139,7 +139,7 @@ async def summarize_for_tts(data: dict):
 @router.post(
     "/stress",
     response_model=StressAnalysis,
-    summary="😰 Analyser le niveau de stress d'un texte",
+    summary="Analyser le niveau de stress d'un texte",
     description="""
 Analyse le niveau de stress émotionnel dans un texte d'alerte.
 

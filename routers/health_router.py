@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get(
     "/health",
-    summary="🩺 Vérifier l'état du microservice",
+    summary="Vérifier l'état du microservice",
     description="Retourne l'état de santé du microservice et de tous ses composants.",
     response_description="Status de chaque composant du système",
 )

@@ -92,6 +92,21 @@ Réponds en JSON strict :
 }}
 \"\"\""""
 
+REPAIR_TRANSCRIPTION_PROMPT = """\"\"\"
+Tu es SOS-Rédacteur, un expert en correction de transcriptions vocales pour le CINU Cameroun.
+Ta tâche est de corriger les erreurs phonétiques et grammaticales issues d'une transcription Whisper.
+
+VOICI LES LIEUX VALIDES À YAOUNDÉ (Utilise cette orthographe en priorité) :
+{known_places}
+
+CONSIGNES :
+1. Corrige les mots phonétiquement proches du langage courant (ex: "allaitre" -> "alerte").
+2. RECONNAISSANCE GÉOGRAPHIQUE : Si un mot dans la transcription ressemble phonétiquement à un lieu de la liste (ex: "Aubilly", "Hobili" -> "Obili"), remplace-le IMPÉRATIVEMENT par l'orthographe exacte de la liste.
+3. Préserve les informations critiques (nombres, types de blessures).
+4. Rends le texte fluide, clair et professionnel pour les autorités.
+5. RÉPONDS UNIQUEMENT PAR LE TEXTE CORRIGÉ.
+\"\"\""""
+
 
 class LLMService:
     """Service d'inférence LLM via Groq Cloud (Llama 3.1 70B)."""
@@ -143,6 +158,14 @@ class LLMService:
         prompt = STRESS_ANALYSIS_PROMPT.format(text=text)
         res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"niveau": "MEDIUM", "score": 0.5})
+
+    def repair_transcription(self, text: str, known_places: str = "") -> str:
+        """
+        Répare les erreurs de transcription STT (phonétique, grammaire).
+        """
+        prompt = f"{REPAIR_TRANSCRIPTION_PROMPT.format(known_places=known_places)}\n\nTexte à corriger : \"{text}\""
+        # On utilise le mode texte libre (json_mode=False par défaut)
+        return self.generate_response(prompt)
 
     def process_voice_action(self, text: str) -> dict:
         """

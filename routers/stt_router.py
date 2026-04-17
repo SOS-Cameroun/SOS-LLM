@@ -27,13 +27,16 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post(
     "/transcribe",
     response_model=STTResponse,
-    summary="🎤 Transcrire un fichier audio",
+    summary="Transcrire un fichier audio",
     description="Transcrit un fichier audio (wav/mp3) en texte via faster-whisper. "
                 "Retourne le texte, la langue détectée et la durée.",
     response_description="Transcription textuelle avec métadonnées",
 )
-async def transcribe_audio(file: UploadFile = File(..., description="Fichier audio wav/mp3")):
-    """Transcrit un fichier audio en texte."""
+async def transcribe_audio(
+    file: UploadFile = File(..., description="Fichier audio wav/mp3"),
+    refine: bool = True,
+):
+    """Transcrit un fichier audio en texte avec raffinement optionnel."""
     file_id = str(uuid.uuid4())
     ext = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
     temp_path = os.path.join(UPLOAD_DIR, f"{file_id}{ext}")
@@ -43,8 +46,18 @@ async def transcribe_audio(file: UploadFile = File(..., description="Fichier aud
 
     try:
         stt_result = await asyncio.to_thread(stt_service.transcribe, temp_path)
+        raw_text = stt_result["text"]
+        final_text = raw_text
+
+        if refine and raw_text:
+            logger.info("🪄 Raffinement intelligent de la transcription via LLM (Geo-Awar)...")
+            from services.geo_service import geo_service
+            landmarks = ", ".join(geo_service.get_all_landmarks())
+            final_text = llm_service.repair_transcription(raw_text, known_places=landmarks)
+
         return STTResponse(
-            text=stt_result["text"],
+            text=final_text,
+            raw_text=raw_text if refine else None,
             language=stt_result["language"],
             duration=stt_result.get("duration"),
         )

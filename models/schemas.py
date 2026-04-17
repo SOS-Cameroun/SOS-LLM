@@ -46,7 +46,8 @@ class TypeUrgence(str, Enum):
 
 class STTResponse(BaseModel):
     """Résultat de la transcription audio → texte via faster-whisper."""
-    text: str = Field(..., description="Texte transcrit de l'audio")
+    text: str = Field(..., description="Texte transcrit (et potentiellement raffiné) de l'audio")
+    raw_text: Optional[str] = Field(None, description="Texte brut original avant raffinement IA")
     language: str = Field(..., description="Langue détectée (code ISO)")
     duration: Optional[float] = Field(None, description="Durée de l'audio en secondes")
 
