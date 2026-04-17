@@ -42,7 +42,7 @@ Peut être utilisé pour :
 async def prompt_llm(request: PromptRequest):
     """Envoie un prompt au LLM et retourne la réponse."""
     try:
-        content = llm_service.generate_response(request.prompt, request.context or "")
+        content = llm_service.generate_response(request.prompt)
         return LLMResponse(response=content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -64,6 +64,24 @@ async def extract_information(request: PromptRequest):
     """Extrait les entités d'un texte via le LLM."""
     try:
         entities = llm_service.extract_entities(request.prompt)
+        
+        score = entities.get("score_fiabilite_initial", 100)
+        
+        # Logging automatique si le score de fiabilité est faible (< 80)
+        if score < 80:
+            from services.fraud_db import fraud_db
+            from models.schemas import LabelFiabilite
+            
+            label = LabelFiabilite.FRAUDE if score < 40 else LabelFiabilite.SUSPECTE
+            await fraud_db.log_fraud(
+                score_fiabilite=int(score),
+                label=label.value,
+                raison=f"Fiabilité initiale faible : {entities.get('resume', 'Lieu suspect')}",
+                alert_text=request.prompt,
+                lieu_declare=entities.get("lieu"),
+                lieu_detecte=entities.get("lieu"),
+            )
+
         return ExtractionResponse(
             type_incident=entities.get("type_incident", "Inconnu"),
             gravite=entities.get("gravite", "Inconnue"),

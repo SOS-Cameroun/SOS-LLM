@@ -107,7 +107,7 @@ class LLMService:
             self.client = Groq(api_key=self.api_key)
             logger.info(f"✅ Service LLM Groq initialisé (Expert Yaoundé)")
 
-    def generate_response(self, prompt: str, system_prompt: str = "", json_mode: bool = True) -> str:
+    def generate_response(self, prompt: str, system_prompt: str = "", json_mode: bool = False) -> str:
         if not self.client: raise RuntimeError("Groq client not initialized")
         
         try:
@@ -131,17 +131,17 @@ class LLMService:
 
     def extract_entities(self, text: str) -> dict:
         prompt = f"{EXTRACTION_PROMPT}\n\nMessage : \"\"\"{text}\"\"\""
-        res = self.generate_response(prompt)
+        res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"type_incident": "AUTRE", "gravite": "Moyenne"})
 
     def hallucinate_completion(self, fragment: str, context: str = "") -> dict:
         prompt = HALLUCINATION_PROMPT_TEMPLATE.format(fragment=fragment, geo_context=context)
-        res = self.generate_response(prompt)
+        res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"texte_complete": fragment})
 
     def analyze_stress_level(self, text: str) -> dict:
         prompt = STRESS_ANALYSIS_PROMPT.format(text=text)
-        res = self.generate_response(prompt)
+        res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"niveau": "MEDIUM", "score": 0.5})
 
     def process_voice_action(self, text: str) -> dict:
@@ -159,7 +159,7 @@ class LLMService:
             "parametres": {{ "id_alerte": "<id>", "agent": "<nom_si_dispo>" }}
         }}
         """
-        res = self.generate_response(prompt)
+        res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"action": "unknown", "parametres": {}})
 
     def generate_tts_response(self, structured_data: dict) -> str:
@@ -174,7 +174,7 @@ class LLMService:
         Règle : Pas de listes, pas de JSON, juste un discours continu et calme.
         """
         # On désactive le mode JSON ici pour avoir du texte brut
-        return self.generate_response(prompt, json_mode=False)
+        return self.generate_response(prompt)
 
     @staticmethod
     def _parse_json(raw: str, fallback: dict) -> dict:

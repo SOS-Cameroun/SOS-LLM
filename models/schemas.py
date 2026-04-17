@@ -88,9 +88,8 @@ class NLPRequest(BaseModel):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class PromptRequest(BaseModel):
-    """Requête générique vers le LLM Groq."""
+    """Requête générique vers le LLM Groq. Le contexte est géré en interne."""
     prompt: str = Field(..., description="Le prompt à envoyer au modèle LLM")
-    context: Optional[str] = Field(None, description="Contexte supplémentaire (RAG, historique)")
 
 
 class LLMResponse(BaseModel):

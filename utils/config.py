@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     # ── Groq Vision (Analyse d'image anti-fraude) ────────────────────────────
-    GROQ_VISION_MODEL: str = "llama-3.2-11b-vision-preview"
+    GROQ_VISION_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
 
     # ── STT : faster-whisper ─────────────────────────────────────────────────
     WHISPER_MODEL: str = "base"  # tiny | base | small | medium | large

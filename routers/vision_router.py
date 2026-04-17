@@ -13,7 +13,8 @@ from typing import Optional, Annotated
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 
 from services.vision_service import vision_service
-from models.schemas import AnalyseVision
+from services.fraud_db import fraud_db
+from models.schemas import AnalyseVision, LabelFiabilite
 
 router = APIRouter()
 logger = logging.getLogger("ai-inference.vision-router")
@@ -46,12 +47,27 @@ async def analyze_image_reliability(
         
         # 2. Comparaison texte-image
         comparison = vision_service.compare_text_image(text, vision_res)
+        
+        score = comparison.get("score_coherence", 50)
+        is_coherent = comparison.get("coherent", True)
+        
+        # 3. Logging automatique en cas de suspicion (score < 70 ou incoherent)
+        if not is_coherent or score < 70:
+            label = LabelFiabilite.FRAUDE if score < 40 else LabelFiabilite.SUSPECTE
+            await fraud_db.log_fraud(
+                score_fiabilite=int(score),
+                label=label.value,
+                raison=comparison.get("explication", "Incohérence détectée par Vision"),
+                alert_text=text,
+                description_image=vision_res.get("description_scene"),
+                lieu_declare=None, # On pourrait extraire le lieu si besoin
+            )
 
         return AnalyseVision(
             description_scene=vision_res.get("description_scene", ""),
             dangers_detectes=vision_res.get("dangers_detectes", []),
-            coherence_avec_texte=comparison.get("coherent", True),
-            score_coherence=comparison.get("score_coherence", 50),
+            coherence_avec_texte=is_coherent,
+            score_coherence=score,
             details_incoherence=comparison.get("details_incoherence"),
         )
 
