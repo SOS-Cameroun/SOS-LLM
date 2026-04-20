@@ -7,7 +7,7 @@ POST /llm/action : parsing de commande vocale agent
 POST /llm/stress : analyse du niveau de stress d'un texte
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException
 import logging
 
 from models.schemas import (
@@ -19,6 +19,11 @@ from models.schemas import (
     NiveauStress,
 )
 from services.llm_service import llm_service
+from services.stt_service import stt_service
+import shutil
+import os
+import uuid
+import asyncio
 
 router = APIRouter()
 logger = logging.getLogger("ai-inference.llm-router")
@@ -165,3 +170,55 @@ async def analyze_stress(request: PromptRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/stress-audio",
+    response_model=StressAnalysis,
+    summary="Analyser le niveau de stress d'un fichier audio",
+    description="""
+Analyse le stress émotionnel en combinant l'acoustique (ton) et le texte (transcription).
+Utile pour détecter l'urgence réelle via le ton de la voix.
+    """,
+    response_description="Analyse de stress complète (Audio + Texte)",
+)
+async def analyze_stress_audio(
+    file: UploadFile = File(..., description="Fichier audio wav/mp3")
+):
+    """Analyse le stress émotionnel d'un audio."""
+    UPLOAD_DIR = "/tmp/sos_audio_stress"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    file_id = str(uuid.uuid4())
+    ext = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
+    temp_path = os.path.join(UPLOAD_DIR, f"{file_id}{ext}")
+
+    with open(temp_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    try:
+        # 1. Transcription pour analyse textuelle
+        stt_result = await asyncio.to_thread(stt_service.transcribe, temp_path)
+        transcript = stt_result["text"]
+        
+        # 2. Analyse acoustique du ton
+        tone_result = await asyncio.to_thread(stt_service.analyze_tone, temp_path)
+        
+        # 3. Analyse hybride via LLM
+        final_result = llm_service.analyze_stress_level(
+            text=transcript,
+            tone_score=tone_result["tone_score"],
+            acoustic_indicators=tone_result["indicators"]
+        )
+        
+        return StressAnalysis(
+            niveau=NiveauStress(final_result.get("niveau", "MEDIUM")),
+            score=final_result.get("score", 0.5),
+            indicateurs=final_result.get("indicateurs", []),
+        )
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de l'analyse de stress audio : {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

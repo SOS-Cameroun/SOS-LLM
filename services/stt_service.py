@@ -1,6 +1,8 @@
 import logging
 from faster_whisper import WhisperModel
 import os
+import numpy as np
+from pydub import AudioSegment
 
 logger = logging.getLogger("ai-inference.stt")
 
@@ -37,6 +39,50 @@ class STTService:
             "language": info.language,
             "duration": info.duration
         }
+
+    def analyze_tone(self, audio_path: str) -> dict:
+        """
+        Analyse le ton de l'audio (acoustique) pour détecter le stress.
+        Retourne un score de stress basé sur le volume (RMS) et l'agitation.
+        """
+        try:
+            audio = AudioSegment.from_file(audio_path)
+            
+            # 1. Volume (RMS)
+            # Un volume élevé (cris) augmente le score de stress.
+            # On normalise par rapport à un maximum théorique.
+            rms = audio.rms
+            max_rms = 32767 # Max pour 16-bit
+            rms_score = min(rms / (max_rms * 0.5), 1.0) # On considère que 50% du max est déjà très fort
+            
+            # 2. Agitation (Variabilité du volume)
+            # On découpe l'audio en morceaux de 100ms et on calcule la variation du RMS.
+            chunk_length_ms = 100
+            chunks = [audio[i:i+chunk_length_ms] for i in range(0, len(audio), chunk_length_ms)]
+            if len(chunks) > 1:
+                rms_values = [c.rms for c in chunks]
+                agitation = np.std(rms_values) / (np.mean(rms_values) + 1e-6)
+                # Une agitation élevée (> 1.0) indique une voix instable/paniquée.
+                agitation_score = min(agitation / 1.5, 1.0)
+            else:
+                agitation_score = 0.0
+            
+            # Score final pondéré
+            tone_score = (rms_score * 0.6) + (agitation_score * 0.4)
+            
+            indicators = []
+            if rms_score > 0.6: indicators.append("volume_eleve")
+            if agitation_score > 0.6: indicators.append("voix_agitee")
+            
+            return {
+                "tone_score": float(tone_score),
+                "indicators": indicators,
+                "rms": float(rms_score),
+                "agitation": float(agitation_score)
+            }
+        except Exception as e:
+            logger.error(f"❌ Erreur lors de l'analyse acoustique : {e}")
+            return {"tone_score": 0.0, "indicators": ["erreur_analyse_acoustique"]}
 
 # Instance Singleton
 stt_service = STTService()

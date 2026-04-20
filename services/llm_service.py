@@ -84,6 +84,7 @@ Réponds en JSON strict :
 STRESS_ANALYSIS_PROMPT = """\"\"\"
 Analyse le stress acoustique et textuel.
 Message : "{text}"
+Indicateurs acoustiques : {acoustic_data}
 Réponds en JSON strict :
 {{
     "niveau": "<LOW|MEDIUM|HIGH|CRITICAL>",
@@ -154,10 +155,34 @@ class LLMService:
         res = self.generate_response(prompt, json_mode=True)
         return self._parse_json(res, {"texte_complete": fragment})
 
-    def analyze_stress_level(self, text: str) -> dict:
-        prompt = STRESS_ANALYSIS_PROMPT.format(text=text)
+    def analyze_stress_level(self, text: str, tone_score: Optional[float] = None, acoustic_indicators: Optional[list] = None) -> dict:
+        acoustic_data = "Aucun"
+        if tone_score is not None:
+            acoustic_data = f"Tone Score: {tone_score}, Indicateurs: {', '.join(acoustic_indicators or [])}"
+
+        prompt = STRESS_ANALYSIS_PROMPT.format(text=text, acoustic_data=acoustic_data)
         res = self.generate_response(prompt, json_mode=True)
-        return self._parse_json(res, {"niveau": "MEDIUM", "score": 0.5})
+        
+        result = self._parse_json(res, {"niveau": "MEDIUM", "score": 0.5})
+        
+        # Si un tone_score est présent, on l'utilise pour pondérer le score final du LLM
+        if tone_score is not None:
+            # On donne 40% de poids à l'acoustique et 60% au texte analysé par le LLM
+            llm_score = result.get("score", 0.5)
+            final_score = (llm_score * 0.6) + (tone_score * 0.4)
+            result["score"] = round(final_score, 2)
+            
+            # Ajustement du niveau si le score final change de catégorie
+            if final_score < 0.3: result["niveau"] = "LOW"
+            elif final_score < 0.6: result["niveau"] = "MEDIUM"
+            elif final_score < 0.8: result["niveau"] = "HIGH"
+            else: result["niveau"] = "CRITICAL"
+            
+            # Ajout des indicateurs acoustiques
+            if acoustic_indicators:
+                result["indicateurs"] = list(set(result.get("indicateurs", []) + acoustic_indicators))
+
+        return result
 
     def repair_transcription(self, text: str, known_places: str = "") -> str:
         """
