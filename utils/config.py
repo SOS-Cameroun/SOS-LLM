@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     # ── Cache ────────────────────────────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379"
 
+    # ── Notifications (Brevo) ────────────────────────────────────────────────
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER_EMAIL: str = "sos-cameroun@aciai.com"
+    EMERGENCY_AUTHORITY_EMAIL: str = "secours@aciai.com"
+
     # ── Serveur ──────────────────────────────────────────────────────────────
     PORT: int = 8001
     LOG_LEVEL: str = "INFO"

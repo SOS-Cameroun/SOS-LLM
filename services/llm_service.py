@@ -224,6 +224,26 @@ class LLMService:
         # On désactive le mode JSON ici pour avoir du texte brut
         return self.generate_response(prompt)
 
+    def generate_reassurance_advice(self, type_incident: str, gravite: str, stress_level: str) -> str:
+        """
+        Génère un message de réassurance et des conseils de premiers secours 
+        spécifiques au type d'incident.
+        """
+        prompt = f"""
+        Tu es une assistante sociale experte en gestion de crise au Cameroun. 
+        Une victime vient de signaler un incident de type {type_incident} avec une gravité {gravite}. 
+        Son niveau de stress est {stress_level}.
+        
+        Tâche : 
+        1. RASSURE la victime avec des mots calmes et bienveillants.
+        2. Donne 2 ou 3 CONSEILS DE SÉCURITÉ immédiats et simples (ex: 'éloignez-vous du feu', 'restez allongé').
+        3. Confirme que les secours ont été informés.
+        
+        Contrainte : Sois concis (max 3 phrases), utilise un ton très humain et rassurant.
+        Réponds directement par le texte à lire à la victime.
+        """
+        return self.generate_response(prompt)
+
     @staticmethod
     def _parse_json(raw: str, fallback: dict) -> dict:
         try:

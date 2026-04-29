@@ -12,13 +12,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import (
-    stt_router,
-    tts_router,
-    nlp_router,
     health_router,
-    llm_router,
-    fraud_router,
-    vision_router,
+    alerts_router
 )
 from utils.config import settings
 from utils.rabbitmq_client import start_rabbitmq_consumer
@@ -53,11 +48,7 @@ app.add_middleware(
 )
 
 # Inclusion des routers
-app.include_router(tts_router.router, prefix="/tts", tags=["TTS (Edge-only)"])
-app.include_router(stt_router.router, prefix="/stt", tags=["STT (Whisper)"])
-app.include_router(llm_router.router, prefix="/llm", tags=["LLM"])
-app.include_router(fraud_router.router, prefix="/fraud", tags=["Anti-Fraude"])
-app.include_router(vision_router.router, prefix="/vision", tags=["Vision — Fiabilité"])
+app.include_router(alerts_router.router, prefix="/alerts", tags=["Alertes Intelligentes"])
 app.include_router(health_router.router, tags=["Health"])
 
 @app.get("/", include_in_schema=False)
