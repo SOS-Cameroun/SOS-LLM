@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body
 import logging
+from typing import Optional, List
 from services.supabase_service import supabase_service
 from pydantic import BaseModel, EmailStr
 
@@ -10,6 +11,12 @@ class RegistrationRequest(BaseModel):
     nom: str
     contact_email: EmailStr
     contact_phone: str
+
+class ContactRequest(BaseModel):
+    citizen_id: str
+    email: EmailStr
+    phone: str
+    nom: Optional[str] = "Contact d'Urgence"
 
 @router.post(
     "/register",
@@ -30,4 +37,26 @@ async def register(request: RegistrationRequest):
         }
     except Exception as e:
         logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post(
+    "/add-contact",
+    summary="Ajouter un contact d'urgence supplémentaire",
+    description="Lie un nouveau contact d'urgence à un citoyen existant."
+)
+async def add_contact(request: ContactRequest):
+    try:
+        result = supabase_service.add_emergency_contact(
+            citizen_id=request.citizen_id,
+            email=request.email,
+            phone=request.phone,
+            nom=request.nom
+        )
+        return {
+            "status": "success",
+            "message": "Contact d'urgence ajouté avec succès",
+            "data": result
+        }
+    except Exception as e:
+        logger.error(f"Add contact error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

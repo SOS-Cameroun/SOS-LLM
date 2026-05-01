@@ -12,6 +12,7 @@ from services.notification_service import notification_service
 from services.tts_service import tts_service
 from services.fraud_db import fraud_db
 from services.geo_service import geo_service
+from services.supabase_service import supabase_service
 from utils.config import settings
 from models.schemas import NiveauStress, LabelFiabilite
 
@@ -41,8 +42,7 @@ async def report_alert(
     file: Optional[UploadFile] = File(None),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
-    contact_email: Optional[str] = Form(None),
-    contact_name: Optional[str] = Form("Contact d'Urgence"),
+    citizen_id: Optional[str] = Form(None),
 ):
     if not text and not file:
         raise HTTPException(status_code=400, detail="Vous devez fournir soit un texte, soit un fichier audio.")
@@ -111,15 +111,20 @@ async def report_alert(
         incident_data=incident_data
     )
 
-    # 5. Notification au contact d'urgence (si fourni)
-    if contact_email:
-        background_tasks.add_task(
-            notification_service.send_emergency_email,
-            to_email=contact_email,
-            subject=f"SOS : Alerte concernant un proche - {type_incident}",
-            incident_data=incident_data,
-            recipient_name=contact_name
-        )
+    # 5. Notification aux contacts d'urgence (si citizen_id fourni)
+    if citizen_id:
+        contacts = supabase_service.get_citizen_contacts(citizen_id)
+        for contact in contacts:
+            c_email = contact.get("email")
+            c_name = contact.get("nom") or "Proche"
+            if c_email:
+                background_tasks.add_task(
+                    notification_service.send_emergency_email,
+                    to_email=c_email,
+                    subject=f"SOS : Alerte concernant un proche - {type_incident}",
+                    incident_data=incident_data,
+                    recipient_name=c_name
+                )
 
     # 6. Réassurance et TTS
     reassurance_text = llm_service.generate_reassurance_advice(type_incident, gravite, stress_level)
