@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     BREVO_SENDER_EMAIL: str = "sos-cameroun@aciai.com"
     EMERGENCY_AUTHORITY_EMAIL: str = "secours@aciai.com"
 
+    # ── Supabase ─────────────────────────────────────────────────────────────
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+
     # ── Serveur ──────────────────────────────────────────────────────────────
     PORT: int = 8001
     LOG_LEVEL: str = "INFO"

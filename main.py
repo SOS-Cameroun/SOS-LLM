@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import (
     health_router,
-    alerts_router
+    alerts_router,
+    registration_router
 )
 from utils.config import settings
 from utils.rabbitmq_client import start_rabbitmq_consumer
@@ -49,6 +50,7 @@ app.add_middleware(
 
 # Inclusion des routers
 app.include_router(alerts_router.router, prefix="/alerts", tags=["Alertes Intelligentes"])
+app.include_router(registration_router.router, prefix="/users", tags=["Utilisateurs"])
 app.include_router(health_router.router, tags=["Health"])
 
 @app.get("/", include_in_schema=False)
