@@ -20,7 +20,7 @@ class SupabaseService:
                 logger.error(f"❌ Failed to initialize Supabase client: {e}")
                 self.client = None
 
-    def register_citizen(self, nom: str, contact_email: str, contact_phone: str):
+    def register_citizen(self, nom: str, contact_email: str, contact_phone: str, nom_contact:str):
         """
         Enregistre un citoyen et son premier contact d'urgence dans Supabase.
         Logique : Citoyen d'abord, puis Contact lié.
@@ -42,7 +42,8 @@ class SupabaseService:
             contact_data = {
                 "email": contact_email,
                 "telephone": contact_phone,
-                "id_citoyen": citizen_id
+                "id_citoyen": citizen_id,
+                "nom":nom_contact
             }
             contact_res = self.client.table("contact_urgence").insert(contact_data).execute()
             
@@ -57,6 +58,22 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"❌ Error during registration: {e}")
             raise e
+
+    def get_citizen_name(self, citizen_id: str):
+        """
+        Récupère le nom d'un citoyen par son ID.
+        """
+        if not self.client:
+            return "Un citoyen"
+        
+        try:
+            res = self.client.table("citoyen").select("nom").eq("id", citizen_id).execute()
+            if res.data:
+                return res.data[0]["nom"]
+            return "Un citoyen"
+        except Exception as e:
+            logger.error(f"❌ Error fetching name for citizen {citizen_id}: {e}")
+            return "Un citoyen"
 
     def get_citizen_contacts(self, citizen_id: str):
         """

@@ -4,7 +4,7 @@ import os
 import uuid
 import shutil
 import asyncio
-from typing import Optional
+from typing import Optional, Annotated
 
 from services.llm_service import llm_service
 from services.stt_service import stt_service
@@ -104,14 +104,22 @@ async def report_alert(
         "gps": f"{latitude}, {longitude}" if latitude else "Non fourni"
     }
     
+    # 5. Récupération du nom de la victime (si citizen_id fourni)
+    victim_name = "Un citoyen"
+    if citizen_id:
+        victim_name = supabase_service.get_citizen_name(citizen_id)
+
+    # 6. Notification Email (Brevo) - En arrière-plan
     background_tasks.add_task(
         notification_service.send_emergency_email,
         to_email=settings.EMERGENCY_AUTHORITY_EMAIL,
         subject=f"URGENCE {type_incident} - {lieu} ({gravite})",
-        incident_data=incident_data
+        incident_data=incident_data,
+        victim_name=victim_name,
+        is_familiar=False
     )
 
-    # 5. Notification aux contacts d'urgence (si citizen_id fourni)
+    # 7. Notification aux contacts d'urgence (si citizen_id fourni)
     if citizen_id:
         contacts = supabase_service.get_citizen_contacts(citizen_id)
         for contact in contacts:
@@ -121,9 +129,11 @@ async def report_alert(
                 background_tasks.add_task(
                     notification_service.send_emergency_email,
                     to_email=c_email,
-                    subject=f"SOS : Alerte concernant un proche - {type_incident}",
+                    subject=f"SOS : Alerte concernant un proche ({victim_name}) - {type_incident}",
                     incident_data=incident_data,
-                    recipient_name=c_name
+                    recipient_name=c_name,
+                    victim_name=victim_name,
+                    is_familiar=True
                 )
 
     # 6. Réassurance et TTS

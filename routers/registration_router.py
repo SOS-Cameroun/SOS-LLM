@@ -11,6 +11,7 @@ class RegistrationRequest(BaseModel):
     nom: str
     contact_email: EmailStr
     contact_phone: str
+    nom_contact:str
 
 class ContactRequest(BaseModel):
     citizen_id: str
@@ -28,7 +29,8 @@ async def register(request: RegistrationRequest):
         result = supabase_service.register_citizen(
             nom=request.nom,
             contact_email=request.contact_email,
-            contact_phone=request.contact_phone
+            contact_phone=request.contact_phone,
+            nom_contact=request.nom_contact
         )
         return {
             "status": "success",

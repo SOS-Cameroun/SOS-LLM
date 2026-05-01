@@ -22,10 +22,13 @@ class NotificationService:
         to_email: str,
         subject: str,
         incident_data: Dict[str, Any],
-        recipient_name: str = "Autorité de Secours"
+        recipient_name: str = "Autorité de Secours",
+        victim_name: str = "Un citoyen",
+        is_familiar: bool = False
     ) -> bool:
         """
         Envoie un email d'alerte structuré via Brevo.
+        is_familiar: Si True, utilise un ton moins formel pour les proches.
         """
         if not self.api_key:
             logger.error("❌ BREVO_API_KEY non configurée. Impossible d'envoyer l'email.")
@@ -37,19 +40,29 @@ class NotificationService:
             "content-type": "application/json"
         }
 
-        # Construction du corps du message en HTML (Design sobre et professionnel)
+        # Personnalisation du message selon le destinataire
+        if is_familiar:
+            greeting = f"Bonjour {recipient_name},"
+            intro = f"Nous t'informons que <strong>{victim_name}</strong> vient de signaler une urgence via l'application SOS-Cameroun. Voici les détails pour que tu puisses l'aider ou rester informé :"
+            footer_note = "Reste calme et essaie de le/la joindre si possible."
+        else:
+            greeting = f"À l'attention de : <strong>{recipient_name}</strong>,"
+            intro = f"Une alerte d'urgence concernant <strong>{victim_name}</strong> a été traitée par notre plateforme. Veuillez trouver ci-dessous les détails complets pour intervention :"
+            footer_note = "Cette alerte a été validée par les algorithmes SOS-Cameroun. Une intervention est requise."
+
+        # Construction du corps du message en HTML
         html_content = f"""
         <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a1a1a; background-color: #f4f4f4; margin: 0; padding: 20px;">
             <div style="max-width: 600px; margin: auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;">
-                <div style="background-color: #004a99; color: #ffffff; padding: 25px; text-align: center; border-bottom: 4px solid #d9534f;">
-                    <h1 style="margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px;">Alerte d'Urgence Nationale</h1>
+                <div style="background-color: {'#d9534f' if is_familiar else '#004a99'}; color: #ffffff; padding: 25px; text-align: center; border-bottom: 4px solid #d9534f;">
+                    <h1 style="margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px;">{ "ALERTE PROCHE" if is_familiar else "Alerte d'Urgence Nationale"}</h1>
                     <p style="margin: 5px 0 0; font-size: 13px; opacity: 0.9;">Système SOS-Cameroun - Centre National d'Urgence</p>
                 </div>
                 
                 <div style="padding: 30px;">
-                    <p style="font-size: 15px;">À l'attention de : <strong>{recipient_name}</strong>,</p>
-                    <p style="margin-bottom: 20px;">Une alerte d'urgence a été traitée par notre plateforme. Veuillez trouver ci-dessous les détails complets pour intervention :</p>
+                    <p style="font-size: 15px;">{greeting}</p>
+                    <p style="margin-bottom: 20px;">{intro}</p>
                     
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <tr style="background-color: #f9f9f9;">
@@ -76,7 +89,7 @@ class NotificationService:
                     
                     <div style="background-color: #fff9f9; border-left: 4px solid #d9534f; padding: 15px; margin-bottom: 20px;">
                         <p style="margin: 0; font-size: 13px; color: #a94442;">
-                            <strong>Note :</strong> Cette alerte a été validée par les algorithmes SOS-Cameroun. Une intervention est requise.
+                            <strong>Note :</strong> {footer_note}
                         </p>
                     </div>
                 </div>
