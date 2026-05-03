@@ -6,18 +6,25 @@ logger = logging.getLogger("ai-inference.supabase")
 
 class SupabaseService:
     def __init__(self):
-        self.url = settings.SUPABASE_URL
-        self.key = settings.SUPABASE_KEY
+        # Récupération et nettoyage des credentials
+        self.url = settings.SUPABASE_URL.strip() if settings.SUPABASE_URL else None
+        self.key = settings.SUPABASE_KEY.strip() if settings.SUPABASE_KEY else None
         
         if not self.url or not self.key:
             logger.warning("⚠️ Supabase credentials not configured. Supabase features will be disabled.")
             self.client = None
         else:
+            # Diagnostic (masqué pour la sécurité)
+            masked_key = f"{self.key[:6]}...{self.key[-4:]}" if len(self.key) > 10 else "***"
+            logger.info(f"🔌 Tentative d'initialisation Supabase sur {self.url}")
+            logger.debug(f"🔑 Key format: len={len(self.key)}, prefix={self.key[:5]}")
+            
             try:
                 self.client: Client = create_client(self.url, self.key)
                 logger.info("✅ Supabase client initialized.")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Supabase client: {e}")
+                logger.error(f"👉 Vérifiez que la clé '{masked_key}' est bien une clé 'anon' valide.")
                 self.client = None
 
     def register_citizen(self, nom: str, contact_email: str, contact_phone: str, nom_contact:str):

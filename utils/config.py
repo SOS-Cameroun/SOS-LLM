@@ -4,7 +4,7 @@ Configuration centralisée via .env
 Charge toutes les variables d'environnement nécessaires au microservice.
 Utilise pydantic-settings pour la validation et les valeurs par défaut.
 """
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -56,9 +56,11 @@ class Settings(BaseSettings):
     PORT: int = 8001
     LOG_LEVEL: str = "INFO"
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 
 settings = Settings()
