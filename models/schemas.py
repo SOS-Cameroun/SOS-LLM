@@ -37,6 +37,7 @@ class TypeUrgence(str, Enum):
     MEDICAL = "MEDICAL"
     INONDATION = "INONDATION"
     AGRESSION = "AGRESSION"
+    CANULAR = "CANULAR"
     AUTRE = "AUTRE"
 
 

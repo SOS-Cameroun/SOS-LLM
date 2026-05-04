@@ -216,6 +216,11 @@ class NLPService:
                 "braquage", "kidnapping", "enlèvement", "séquestration",
                 "viol", "violence", "bagarre", "machette",
             ],
+            "CANULAR": [
+                "blague", "canular", "test", "pizza", "rien à signaler",
+                "salut", "bonjour", "insulte", "imbécile", "idiot",
+                "n'importe quoi", "pour rire", "amusement",
+            ],
         }
 
         text_lower = text.lower()
