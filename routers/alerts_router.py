@@ -167,6 +167,6 @@ async def report_alert(
         },
         "reassurance": {
             "text": reassurance_text,
-            "audio_url": tts_result["audio_path"]
+            "audio_url": tts_result.get("audio_url") or tts_result["audio_path"]
         }
     }

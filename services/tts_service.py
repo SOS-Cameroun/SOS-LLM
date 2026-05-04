@@ -17,6 +17,7 @@ from typing import Optional
 
 import edge_tts
 from utils.config import settings
+from services.supabase_service import supabase_service
 
 logger = logging.getLogger("ai-inference.tts")
 
@@ -106,7 +107,15 @@ class TTSService:
             communicate = edge_tts.Communicate(text, voice)
             await communicate.save(output_path)
             logger.info(f"✅ Audio Edge-TTS généré : {output_path}")
-            return {"audio_path": output_path, "engine_used": "edge"}
+
+            # Upload vers Supabase
+            audio_url = supabase_service.upload_audio(output_path)
+            
+            return {
+                "audio_path": output_path, 
+                "audio_url": audio_url,
+                "engine_used": "edge"
+            }
         except Exception as e:
             logger.error(f"❌ Edge-TTS a échoué : {e}")
             raise RuntimeError(f"Edge-TTS synthesis failed: {e}")

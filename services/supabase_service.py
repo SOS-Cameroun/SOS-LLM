@@ -1,4 +1,5 @@
 import logging
+import os
 from supabase import create_client, Client
 from utils.config import settings
 
@@ -135,5 +136,32 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"❌ Error adding contact for citizen {citizen_id}: {e}")
             raise e
+
+    def upload_audio(self, file_path: str, bucket_name: str = "audio"):
+        """
+        Upload un fichier audio vers un bucket Supabase et retourne son URL publique.
+        """
+        if not self.client:
+            logger.warning("Supabase client not initialized, cannot upload audio.")
+            return None
+
+        try:
+            file_name = os.path.basename(file_path)
+            with open(file_path, 'rb') as f:
+                # Upload du fichier
+                res = self.client.storage.from_(bucket_name).upload(
+                    path=file_name,
+                    file=f,
+                    file_options={"content-type": "audio/mpeg"}
+                )
+            
+            # Récupération de l'URL publique
+            public_url = self.client.storage.from_(bucket_name).get_public_url(file_name)
+            logger.info(f"✅ Audio uploadé vers Supabase : {public_url}")
+            return public_url
+            
+        except Exception as e:
+            logger.error(f"❌ Erreur lors de l'upload vers Supabase : {e}")
+            return None
 
 supabase_service = SupabaseService()
