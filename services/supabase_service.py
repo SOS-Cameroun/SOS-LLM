@@ -82,6 +82,22 @@ class SupabaseService:
             logger.error(f"❌ Error fetching name for citizen {citizen_id}: {e}")
             return "Un citoyen"
 
+    def get_citizen(self, citizen_id: str):
+        """
+        Récupère les informations complètes d'un citoyen par son ID.
+        """
+        if not self.client:
+            return None
+        
+        try:
+            res = self.client.table("citoyen").select("*").eq("id", citizen_id).execute()
+            if res.data:
+                return res.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"❌ Error fetching citizen {citizen_id}: {e}")
+            return None
+
     def get_citizen_contacts(self, citizen_id: str):
         """
         Récupère tous les contacts d'urgence d'un citoyen.
