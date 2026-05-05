@@ -28,7 +28,7 @@ class SupabaseService:
                 logger.error(f"👉 Vérifiez que la clé '{masked_key}' est bien une clé 'anon' valide.")
                 self.client = None
 
-    def register_citizen(self, nom: str, contact_email: str, contact_phone: str, nom_contact:str):
+    def register_citizen(self, nom: str, email: str, telephone: str, contact_email: str, contact_phone: str, nom_contact: str):
         """
         Enregistre un citoyen et son premier contact d'urgence dans Supabase.
         Logique : Citoyen d'abord, puis Contact lié.
@@ -37,8 +37,12 @@ class SupabaseService:
             raise RuntimeError("Supabase client not initialized")
 
         try:
-            # 1. Insérer le citoyen
-            citizen_data = {"nom": nom}
+            # 1. Insérer le citoyen (avec email et téléphone)
+            citizen_data = {
+                "nom": nom,
+                "email": email,
+                "telephone": telephone,
+            }
             citizen_res = self.client.table("citoyen").insert(citizen_data).execute()
             
             if not citizen_res.data:

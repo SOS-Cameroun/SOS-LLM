@@ -9,9 +9,11 @@ logger = logging.getLogger("ai-inference.registration")
 
 class RegistrationRequest(BaseModel):
     nom: str
-    contact_email: EmailStr
-    contact_phone: str
-    nom_contact:str
+    email: EmailStr                  # Email du citoyen lui-même
+    telephone: str                   # Numéro de téléphone du citoyen
+    contact_email: EmailStr          # Email du contact d'urgence
+    contact_phone: str               # Téléphone du contact d'urgence
+    nom_contact: str
 
 class ContactRequest(BaseModel):
     citizen_id: str
@@ -28,6 +30,8 @@ async def register(request: RegistrationRequest):
     try:
         result = supabase_service.register_citizen(
             nom=request.nom,
+            email=request.email,
+            telephone=request.telephone,
             contact_email=request.contact_email,
             contact_phone=request.contact_phone,
             nom_contact=request.nom_contact
