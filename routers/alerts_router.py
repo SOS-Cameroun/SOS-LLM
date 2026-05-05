@@ -110,31 +110,35 @@ async def report_alert(
         victim_name = supabase_service.get_citizen_name(citizen_id)
 
     # 6. Notification Email (Brevo) - En arrière-plan
-    background_tasks.add_task(
-        notification_service.send_emergency_email,
-        to_email=settings.EMERGENCY_AUTHORITY_EMAIL,
-        subject=f"URGENCE {type_incident} - {lieu} ({gravite})",
-        incident_data=incident_data,
-        victim_name=victim_name,
-        is_familiar=False
-    )
+    # ON FILTRE : Pas d'email pour CANULAR ou AUTRE pour éviter la saturation (Demande utilisateur)
+    if type_incident not in ["CANULAR", "AUTRE"]:
+        background_tasks.add_task(
+            notification_service.send_emergency_email,
+            to_email=settings.EMERGENCY_AUTHORITY_EMAIL,
+            subject=f"URGENCE {type_incident} - {lieu} ({gravite})",
+            incident_data=incident_data,
+            victim_name=victim_name,
+            is_familiar=False
+        )
 
-    # 7. Notification aux contacts d'urgence (si citizen_id fourni)
-    if citizen_id:
-        contacts = supabase_service.get_citizen_contacts(citizen_id)
-        for contact in contacts:
-            c_email = contact.get("email")
-            c_name = contact.get("nom") or "Proche"
-            if c_email:
-                background_tasks.add_task(
-                    notification_service.send_emergency_email,
-                    to_email=c_email,
-                    subject=f"SOS : Alerte concernant un proche ({victim_name}) - {type_incident}",
-                    incident_data=incident_data,
-                    recipient_name=c_name,
-                    victim_name=victim_name,
-                    is_familiar=True
-                )
+        # 7. Notification aux contacts d'urgence (si citizen_id fourni)
+        if citizen_id:
+            contacts = supabase_service.get_citizen_contacts(citizen_id)
+            for contact in contacts:
+                c_email = contact.get("email")
+                c_name = contact.get("nom") or "Proche"
+                if c_email:
+                    background_tasks.add_task(
+                        notification_service.send_emergency_email,
+                        to_email=c_email,
+                        subject=f"SOS : Alerte concernant un proche ({victim_name}) - {type_incident}",
+                        incident_data=incident_data,
+                        recipient_name=c_name,
+                        victim_name=victim_name,
+                        is_familiar=True
+                    )
+    else:
+        logger.info(f"🚫 Notification annulée pour le type : {type_incident} (Canular ou non-urgent)")
 
     # 6. Réassurance et TTS
     reassurance_text = llm_service.generate_reassurance_advice(type_incident, gravite, stress_level)
